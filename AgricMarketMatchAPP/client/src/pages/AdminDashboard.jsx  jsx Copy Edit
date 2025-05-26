@@ -1,0 +1,57 @@
+import { useEffect, useState, useContext } from 'react';
+import axios from 'axios';
+import { AuthContext } from '../context/AuthContext';
+
+export default function AdminDashboard() {
+  const { user } = useContext(AuthContext);
+  const [users, setUsers] = useState([]);
+  const [produce, setProduce] = useState([]);
+  const [alerts, setAlerts] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const config = { headers: { Authorization: `Bearer ${user.token}` } };
+      const [u, p, a] = await Promise.all([
+        axios.get('http://localhost:5000/api/admin/users', config),
+        axios.get('http://localhost:5000/api/admin/produce', config),
+        axios.get('http://localhost:5000/api/admin/alerts', config)
+      ]);
+      setUsers(u.data);
+      setProduce(p.data);
+      setAlerts(a.data);
+    };
+
+    fetchData();
+  }, [user]);
+
+  return (
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-4">Admin Dashboard</h2>
+
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Users</h3>
+        {users.map(u => (
+          <div key={u._id} className="border p-2 mb-2">{u.name} ({u.email})</div>
+        ))}
+      </section>
+
+      <section className="mb-6">
+        <h3 className="text-lg font-semibold mb-2">Produce Listings</h3>
+        {produce.map(p => (
+          <div key={p._id} className="border p-2 mb-2">
+            {p.name} - {p.quantity} units @ {p.price}
+          </div>
+        ))}
+      </section>
+
+      <section>
+        <h3 className="text-lg font-semibold mb-2">Price Alerts</h3>
+        {alerts.map(a => (
+          <div key={a._id} className="border p-2 mb-2">
+            {a.produce} — alert above {a.priceThreshold}
+          </div>
+        ))}
+      </section>
+    </div>
+  );
+}
